@@ -1,0 +1,14 @@
+
+
+(request
+"https://api.travis-ci.com/user"
+:headers '(("Travis-API-Version" . 3) ("User-Agent" . "API Explorer") ("Authorization" . "token H60yeYCilDQ-htqJqjYHpw")))
+
+
+(request
+ "http://httpbin.org/get"
+ :params '(("key" . "value") ("key2" . "value2"))
+ :parser 'json-read
+ :success (cl-function
+           (lambda (&key data &allow-other-keys)
+             (message "I sent: %S" (assoc-default 'args data)))))
