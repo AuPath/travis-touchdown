@@ -24,12 +24,24 @@
 
 ;;; Code:
 
+;;; token : H60yeYCilDQ-htqJqjYHpw
+
 (require 'request)
+(require 'request-deferred)
 (require 'json)
 
 (defconst travis-api-url "https://api.travis-ci.com")
 
-(defvar travis-headers)
+(defvar travis-headers nil)
+(defvar travis-user-login nil)
+
+(defun travis-set-user ()
+  (interactive)
+  (setq travis-user-login (read-string "User login: ")))
+
+(defun travis-show-user ()
+  (interactive)
+  (message "User: %s" travis-user-login))
 
 (defun travis-set-headers (token)
   (setq travis-headers (backquote (("Travis-API-Version" . "3")
@@ -60,6 +72,10 @@ travis-token
 
 (defvar travis-owned-repos '())
 
+(defun travis-show-repos-owned ()
+  (interactive)
+  (message "Owned repositories: %s" travis-owned-repos))
+
 (defun travis-url-to-builds (project-name)
   (format "%s/repo/%s/builds" travis-api-url (url-hexify-string project-name)))
 
@@ -82,7 +98,6 @@ travis-token
   (with-current-buffer (get-buffer-create buffer-name)
     (erase-buffer)
     (insert data)
-    (read-only-mode)
     (pop-to-buffer (current-buffer))
     (goto-char (point-min))))
 
@@ -105,6 +120,24 @@ travis-token
 					   "\n\n"))
 		    (lambda (x) (gethash "builds" x)))
 
+(defun travis-get-latest-build-for-repo ()
+  (interactive)
+  (travis-refresh-data)
+  (travis-get-request (travis-url-to-builds (ido-completing-read "Available repositories: " travis-owned-repos))
+		      'travis-show-buffer-with-data
+		      "*Travis-builds*"
+		      'travis-build-to-string
+		      (lambda (x) (first (gethash "builds" x)))))
+
+(defun travis-get-builds-for-repo ()
+  (interactive)
+  (travis-refresh-data)
+  (travis-get-request (travis-url-to-builds (ido-completing-read "Available repositories: " travis-owned-repos))
+		      'travis-show-buffer-with-data
+		      "*Travis-builds*"
+		      (lambda (x) (mapconcat 'travis-build-to-string x "\n\n"))
+		      (lambda (x) (gethash "builds" x))))
+
 (defun travis-get-active-repositories (user-login)
   (request
     (travis-url-to-owned-repos user-login)
@@ -114,9 +147,8 @@ travis-token
     :success (cl-function
 	      (lambda (&key data &allow-other-keys)
 		(setq travis-owned-repos (mapcar (lambda (x) (list (gethash "slug" x) (gethash "id" x)))
-						 (remove-if (lambda (x) (equal :json-false
-									       (gethash "active" x)))
-							    (gethash "repositories" data))))))))
+						 (gethash "repositories" data)))))))
+
 (travis-get-active-repositories "AuPath")
 (setq travis-owned-repos nil)
 
@@ -124,9 +156,15 @@ travis-owned-repos
 
 (second (assoc "AuPath/ProvaJavaProgetto" travis-owned-repos))
 
-(defun prova ()
+(defun travis-refresh-data ()
   (interactive)
-  (message "%s" (ido-completing-read "lol: " '("ciao" "come" "va"))))
+  (travis-get-active-repositories travis-user-login))
+
+(deferred:$
+    (request-deferred "http://httpbin.org/get" :parser 'json-read)
+    (deferred:nextc it
+      (lambda (response)
+        (message "Got: %S" (request-response-data response)))))
 
 (provide 'travis-api)
 ;;; travis-api.el ends here

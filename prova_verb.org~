@@ -1,8 +1,0 @@
-* get users info :verb:
-get https://api.travis-ci.com/user
-Travis-API-Version: 3
-User-Agent: API Explorer
-Authorization: token H60yeYCilDQ-htqJqjYHpw
-
-* get user propic :verb:
-get https://avatars1.githubusercontent.com/u/54220456?v=4
