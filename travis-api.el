@@ -74,9 +74,15 @@ travis-token
 
 (defvar travis-owned-repos '())
 
+(defvar travis-user-organizations '())
+
 (defun travis-show-repos-owned ()
   (interactive)
   (message "Owned repositories: %s" travis-owned-repos))
+
+(defun travis-show-organizations ()
+  (interactive)
+  (message "Organizations: %s" travis-user-organizations))
 
 (defun travis-url-to-builds (project-name)
   (format "%s/repo/%s/builds" travis-api-url (url-hexify-string project-name)))
@@ -176,6 +182,27 @@ travis-owned-repos
     :type "POST"
     :headers travis-headers
     :success (message "restarted build successfully")))
+
+(defun travis-cancel-build ()
+  (interactive)
+  (request
+    (format "%s/build/%s/cancel" travis-api-url (read-string "Build ID: "))
+    :type "POST"
+    :headers travis-headers
+    :success (message "cancelled builds successfully")))
+
+(defun travis-get-organizations ()
+  (request
+    (format "%s/orgs" travis-api-url)
+    :type "GET"
+    :headers travis-headers
+    :parser travis-json-parser-options
+    :success (cl-function
+	      (lambda (&key data &allow-other-keys)
+		(setq travis-user-organizations
+		      (mapcar (lambda (x) (gethash "login" x))
+			      (gethash "organizations" data)))))))
+
 
 (defun test-deferred ()
   
