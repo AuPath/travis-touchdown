@@ -26,6 +26,8 @@
 
 ;;; token : H60yeYCilDQ-htqJqjYHpw
 
+;; search build by commit
+
 (require 'request)
 (require 'request-deferred)
 (require 'json)
@@ -103,22 +105,29 @@ travis-token
 
 (defun travis-build-to-string (build)
   "Returns a string containing all relevant information from BUILD"
-  (format "Repository: %s\nBranch: %s\nState: %s\nStarted: %s\nFinished: %s\nDuration: %s"
-	  (gethash "name" (gethash "repository" build))
-	  (gethash "name" (gethash "branch" build))
-	  (gethash "state" build)
-	  (gethash "started_at" build)
-	  (gethash "finished_at" build)
-	  (format-seconds "%H %M %S" (gethash "duration" build))))
-
-
-(travis-get-request (travis-url-to-builds "AuPath/ProvaJavaProgetto")
-		    'travis-show-buffer-with-data
-		    "*Travis-builds*"
-		    (lambda (x) (mapconcat 'travis-build-to-string
-					   x
-					   "\n\n"))
-		    (lambda (x) (gethash "builds" x)))
+  (let ((build-status (gethash "state" build)))
+    (cond ((equal "created" build-status)
+	   (format "Repository: %s\nBranch: %s\nBuild ID: %s\nState: %s\n"
+		   (gethash "name" (gethash "repository" build))
+		   (gethash "name" (gethash "branch" build))
+		   (gethash "id" build)
+		   (gethash "state" build)))
+	  ((equal "started" build-status)
+	   (format "Repository: %s\nBranch: %s\nBuild ID: %s\nState: %s\nStarted: %s\n"
+		   (gethash "name" (gethash "repository" build))
+		   (gethash "name" (gethash "branch" build))
+		   (gethash "id" build)
+		   (gethash "state" build)
+		   (gethash "started_at" build)))
+	  (t
+	   (format "Repository: %s\nBranch: %s\nBuild ID: %s\nState: %s\nStarted: %s\nFinished: %s\nDuration: %s"
+		   (gethash "name" (gethash "repository" build))
+		   (gethash "name" (gethash "branch" build))
+		   (gethash "id" build)
+		   (gethash "state" build)
+		   (gethash "started_at" build)
+		   (gethash "finished_at" build)
+		   (format-seconds "%H %M %S" (gethash "duration" build)))))))
 
 (defun travis-get-latest-build-for-repo ()
   (interactive)
@@ -159,6 +168,24 @@ travis-owned-repos
 (defun travis-refresh-data ()
   (interactive)
   (travis-get-active-repositories travis-user-login))
+
+(defun travis-restart-build ()
+  (interactive)
+  (request
+    (format "%s/build/%s/restart" travis-api-url (read-string "Build ID: "))
+    :type "POST"
+    :headers travis-headers
+    :success (message "restarted build successfully")))
+
+(defun test-deferred ()
+  
+  (deferred:$
+    (deferred:next
+      (lambda () (travis-refresh-data)))
+      (deferred:nextc it
+	(lambda () (travis-get-latest-build-for-repo)))))
+
+(test-deferred)
 
 (deferred:$
     (request-deferred "http://httpbin.org/get" :parser 'json-read)
