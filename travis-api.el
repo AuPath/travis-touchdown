@@ -26,8 +26,6 @@
 
 ;;; token : H60yeYCilDQ-htqJqjYHpw
 
-;; search build by commit
-
 (require 'request)
 (require 'request-deferred)
 (require 'json)
@@ -50,8 +48,6 @@
 			   ("User-Agent" . "API Explorer")
 			   ("Authorization" . ,(format "token %s" token))))))
 			    
-travis-headers
-  
 (defconst travis-json-parser-options
   (lambda ()
     (let ((json-object-type 'hash-table)
@@ -69,8 +65,6 @@ travis-headers
 (defun travis-show-token ()
   (interactive)
   (message "Travis token: %s" travis-token))
-
-travis-token
 
 (defvar travis-owned-repos '())
 
@@ -202,23 +196,6 @@ travis-owned-repos
 		(setq travis-user-organizations
 		      (mapcar (lambda (x) (gethash "login" x))
 			      (gethash "organizations" data)))))))
-
-
-(defun test-deferred ()
-  
-  (deferred:$
-    (deferred:next
-      (lambda () (travis-refresh-data)))
-      (deferred:nextc it
-	(lambda () (travis-get-latest-build-for-repo)))))
-
-(test-deferred)
-
-(deferred:$
-    (request-deferred "http://httpbin.org/get" :parser 'json-read)
-    (deferred:nextc it
-      (lambda (response)
-        (message "Got: %S" (request-response-data response)))))
 
 (provide 'travis-api)
 ;;; travis-api.el ends here
