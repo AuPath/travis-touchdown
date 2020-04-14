@@ -29,24 +29,32 @@
 
 ;; API URLs
 (defconst travis-api-url "https://api.travis-ci.com")
+(defconst travis-lint-url (concat travis-api-url "/lint"))
 
 (defun travis-url-owned-repos (user-login)
   "Return url to repositories owned by USER-LOGIN."
   (format "%s/owner/%s/repos" travis-api-url user-login))
 
-(defun travis-url-builds-for-repo (id)
-  "Return url for getting builds for repo with ID."
-  (format "%s/repo/%s/builds" travis-api-url id))
+(defun travis-url-builds-for-repo (repo-slug)
+  "Return url for getting builds for repo with REPO-SLUG."
+  (format "%s/repo/%s/builds" travis-api-url (url-hexify-string repo-slug)))
 
 (defun travis-url-active-builds (user-login)
   "Return url for getting active builds for user USER-LOGIN."
   (format "%s/owner/%s/active" travis-api-url user-login))
 
+(defvar travis-url-to-orgs (format "%s/orgs" travis-api-url))
+
+(defun travis-url-repo-branches (repo-slug)
+  "Return url to get branches for REPO-SLUG."
+  (format "%s/repo/%s/branches" travis-api-url (url-hexify-string repo-slug)))
+
 ;; VARIABLES
 (defvar travis-token nil)
 (defvar travis-user-login nil)
-(defvar travis-user-repos-verbose nil)
 (defvar travis-headers nil)
+
+;; CONFIG FUNCTIONS
 
 (defun travis-set-headers (token)
   "Set token for http requests with security TOKEN."
@@ -75,15 +83,15 @@
   (interactive)
   (message "Travis token: %s" travis-token))
 
+;; REQUEST FUNCTIONS
+
 (defun travis-show-builds-for-repo ()
   "Show builds for specified repo."
   (interactive)
-  (travis-request-user-repos)
   (request
-    (travis-url-builds-for-repo (travis-get-repo-id-from-name
-				 (ido-completing-read
-				  "Available repositories: "
-				  (travis-repos-name))))
+    (travis-url-builds-for-repo (ido-completing-read
+				 "Repositories: "
+				 (travis-request-user-repos)))
     :type "GET"
     :headers travis-headers
     :parser (lambda ()
@@ -97,28 +105,42 @@
 							 "\n\n"))))))
 ;; HELPER FUNCTIONS
 
-(defun travis-repos-name ()
-  "Return a list containg the name of the repos owned by the user."
-  (mapcar 'first travis-user-repos-verbose))
-
-(defun travis-get-repo-id-from-name (repo-name)
-  "Return repo id for repo REPO-NAME."
-  (assoc-default repo-name travis-user-repos-verbose))
-
 (defun travis-request-user-repos ()
   "Request user owned repos for user stored in owner-repos."
+  (let ((response
   (request
     (travis-url-owned-repos travis-user-login)
     :type "GET"
     :headers travis-headers
     :parser 'json-read
     :sync t
-    :success (cl-function
-	      (lambda (&key data &allow-other-keys)
-		(setq travis-user-repos-verbose (mapcar (lambda (x) (cons
-								     (assoc-default 'name x)
-								     (assoc-default 'id x)))
-							(assoc-default 'repositories data)))))))
+    )))
+    (mapcar (lambda (x) (assoc-default 'slug x)) (assoc-default 'repositories (request-response-data response)))))
+
+(defun travis-request-user-repo-branches (repo-name)
+  "Request user owned repo branches for REPO-NAME."
+  (let ((response
+  (request
+    (travis-url-repo-branches repo-name)
+    :type "GET"
+    :headers travis-headers
+    :parser 'json-read
+    :sync t
+    )))
+    (request-response-data response)))
+
+(defun travis-request-user-orgs ()
+  "Return a list of the organizations the user belongs to."
+  (let ((response
+	 (request
+	   travis-url-to-orgs
+	   :type "GET"
+	   :headers travis-headers
+	   :parser 'json-read
+	   :sync t
+	   )))
+    (mapcar (lambda (x) (assoc-default 'login x))
+	    (assoc-default 'organizations (request-response-data response)))))
 
 (defun travis-build-to-string (build)
   "Return string to insert into display buffer for BUILD."
@@ -142,6 +164,12 @@
     (insert data)
     (pop-to-buffer (current-buffer))
     (goto-char (point-min))))
+
+;;; CONFIG ON EVAL
+
+(setq travis-user-login "AuPath")
+(setq travis-token "H60yeYCilDQ-htqJqjYHpw")
+(travis-set-headers travis-token)
 
 (provide 'new-travis-api)
 ;;; new-travis-api.el ends here
