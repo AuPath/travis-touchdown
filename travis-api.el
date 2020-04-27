@@ -1,4 +1,4 @@
-;;; travis-api.el --- Interface to Travis CI API     -*- lexical-binding: t; -*-
+;;; new-travis-api.el --- Interface to Travis CI API     -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020  Aurelio
 
@@ -20,182 +20,132 @@
 
 ;;; Commentary:
 
-;; 
-
 ;;; Code:
 
 ;;; token : H60yeYCilDQ-htqJqjYHpw
 
 (require 'request)
-(require 'request-deferred)
 (require 'json)
+(require 'travis-urls)
 
-(defconst travis-api-url "https://api.travis-ci.com")
-
-(defvar travis-headers nil)
-(defvar travis-user-login nil)
-
-(defun travis-set-user ()
-  (interactive)
-  (setq travis-user-login (read-string "User login: ")))
-
-(defun travis-show-user ()
-  (interactive)
-  (message "User: %s" travis-user-login))
-
-(defun travis-set-headers (token)
-  (setq travis-headers (backquote (("Travis-API-Version" . "3")
-			   ("User-Agent" . "API Explorer")
-			   ("Authorization" . ,(format "token %s" token))))))
-			    
-(defconst travis-json-parser-options
-  (lambda ()
-    (let ((json-object-type 'hash-table)
-	  (json-array-type 'list)
-	  (json-key-type 'string))
-      (json-read))))
-
+;; VARIABLES
 (defvar travis-token nil)
 
+(defvar travis-headers nil)
+
+
+
+
+
+
+
+;; CONFIG FUNCTIONS
+
+(defun travis-set-headers (token)
+  "Set token for http requests with security TOKEN."
+  (setq travis-headers (backquote (("Travis-API-Version" . "3")
+				   ("User-Agent" . "API Explorer")
+				   ("Authorization" . ,(format "token %s" token))))))
+
 (defun travis-set-token ()
+  "Interactively set travis secret token."
   (interactive)
   (setq travis-token (read-string "Insert travis token: "))
   (travis-set-headers travis-token))
 
 (defun travis-show-token ()
+  "Interactively show Travis token."
   (interactive)
   (message "Travis token: %s" travis-token))
 
-(defvar travis-owned-repos '())
+;; REQUEST FUNCTIONS
 
-(defvar travis-user-organizations '())
-
-(defun travis-show-repos-owned ()
+(defun travis-show-builds-for-repo ()
+  "Show builds for specified repo."
   (interactive)
-  (message "Owned repositories: %s" travis-owned-repos))
-
-(defun travis-show-organizations ()
-  (interactive)
-  (message "Organizations: %s" travis-user-organizations))
-
-(defun travis-url-to-builds (project-name)
-  (format "%s/repo/%s/builds" travis-api-url (url-hexify-string project-name)))
-
-(defun travis-url-to-owned-repos (user-login)
-  (format "%s/owner/%s/repos" travis-api-url user-login))
-
-(defun travis-get-request (url buf buf-name stri get-data)
   (request
-    url
+    (travis-url-builds-for-repo (ido-completing-read
+				 "Repositories: "
+				 travis-bookmarked-repos))
+  :type "GET"
+  :headers travis-headers
+  :parser (lambda ()
+            (let ((json-array-type 'list))
+              (json-read)))
+  :success (cl-function
+	    (lambda (&key data &allow-other-keys)
+	      (travis-show-buffer-with-data "*BUILDS*"
+					    (mapconcat 'travis-build-to-string
+						       (assoc-default 'builds data)
+						       "\n\n"))))))
+;; HELPER FUNCTIONS
+
+(defun travis-request-user-repos (user)
+  "Request user owned repos for user stored in owner-repos."
+  (let ((response
+	 (request
+	   (travis-url-owned-repos user)
+	   :type "GET"
+	   :headers travis-headers
+	   :parser 'json-read
+	   :sync t
+	   )))
+    (mapcar (lambda (x) (assoc-default 'slug x))
+	    (assoc-default 'repositories (request-response-data response)))))
+
+(defun travis-request-user-repo-branches (repo-name)
+  "Request user owned repo branches for REPO-NAME."
+  (let ((response
+  (request
+    (travis-url-repo-branches repo-name)
     :type "GET"
     :headers travis-headers
-    :parser travis-json-parser-options
-    :error (message "error during get request")
-    :success (cl-function
-	      (lambda (&key data &allow-other-keys)
-		(funcall buf buf-name
-			 (funcall stri (funcall get-data data)))))))
+    :parser 'json-read
+    :sync t
+    )))
+    (request-response-data response)))
+
+(defun travis-request-user-orgs ()
+  "Return a list of the organizations the user belongs to."
+  (let ((response
+	 (request
+	   travis-url-to-orgs
+	   :type "GET"
+	   :headers travis-headers
+	   :parser 'json-read
+	   :sync t
+	   )))
+    (mapcar (lambda (x) (assoc-default 'login x))
+	    (assoc-default 'organizations (request-response-data response)))))
+
+(defun travis-build-to-string (build)
+  "Return string to insert into display buffer for BUILD."
+  (concat (format "Build for repository: %s\n" (assoc-default 'name (assoc-default 'repository build)))
+	  (format "Build for branch: %s\n" (assoc-default 'name (assoc-default 'branch build)))
+	  (format "Build for commit: %s\n" (assoc-default 'id (assoc-default 'commit build)))
+	  (format "Build ID: %s\n" (assoc-default 'id build))
+	  (format "Build number: %s\n" (assoc-default 'number build))
+	  (format "Build state: %s\n" (assoc-default 'state build))
+	  (format "Build previous state: %s\n" (assoc-default 'previous_state build))
+	  (format "Build started at: %s\n" (assoc-default 'started_at build))
+	  (format "Build finished at: %s\n" (assoc-default 'finished_at build))
+	  (format "Build took: %s\n" (format-seconds
+				      "%H %M %S"
+				      (assoc-default 'duration build)))))
 
 (defun travis-show-buffer-with-data (buffer-name data)
+  "Open a buffer named BUFFER-NAME and insert DATA."
   (with-current-buffer (get-buffer-create buffer-name)
     (erase-buffer)
     (insert data)
     (pop-to-buffer (current-buffer))
     (goto-char (point-min))))
 
-(defun travis-build-to-string (build)
-  "Returns a string containing all relevant information from BUILD"
-  (let ((build-status (gethash "state" build)))
-    (cond ((equal "created" build-status)
-	   (format "Repository: %s\nBranch: %s\nBuild ID: %s\nState: %s\n"
-		   (gethash "name" (gethash "repository" build))
-		   (gethash "name" (gethash "branch" build))
-		   (gethash "id" build)
-		   (gethash "state" build)))
-	  ((equal "started" build-status)
-	   (format "Repository: %s\nBranch: %s\nBuild ID: %s\nState: %s\nStarted: %s\n"
-		   (gethash "name" (gethash "repository" build))
-		   (gethash "name" (gethash "branch" build))
-		   (gethash "id" build)
-		   (gethash "state" build)
-		   (gethash "started_at" build)))
-	  (t
-	   (format "Repository: %s\nBranch: %s\nBuild ID: %s\nState: %s\nStarted: %s\nFinished: %s\nDuration: %s"
-		   (gethash "name" (gethash "repository" build))
-		   (gethash "name" (gethash "branch" build))
-		   (gethash "id" build)
-		   (gethash "state" build)
-		   (gethash "started_at" build)
-		   (gethash "finished_at" build)
-		   (format-seconds "%H %M %S" (gethash "duration" build)))))))
+;;; CONFIG ON EVAL
 
-(defun travis-get-latest-build-for-repo ()
-  (interactive)
-  (travis-refresh-data)
-  (travis-get-request (travis-url-to-builds (ido-completing-read "Available repositories: " travis-owned-repos))
-		      'travis-show-buffer-with-data
-		      "*Travis-builds*"
-		      'travis-build-to-string
-		      (lambda (x) (first (gethash "builds" x)))))
+(setq travis-user-login "AuPath")
+(setq travis-token "H60yeYCilDQ-htqJqjYHpw")
+(travis-set-headers travis-token)
 
-(defun travis-get-builds-for-repo ()
-  (interactive)
-  (travis-refresh-data)
-  (travis-get-request (travis-url-to-builds (ido-completing-read "Available repositories: " travis-owned-repos))
-		      'travis-show-buffer-with-data
-		      "*Travis-builds*"
-		      (lambda (x) (mapconcat 'travis-build-to-string x "\n\n"))
-		      (lambda (x) (gethash "builds" x))))
-
-(defun travis-get-active-repositories (user-login)
-  (request
-    (travis-url-to-owned-repos user-login)
-    :type "GET"
-    :headers travis-headers
-    :parser travis-json-parser-options
-    :success (cl-function
-	      (lambda (&key data &allow-other-keys)
-		(setq travis-owned-repos (mapcar (lambda (x) (list (gethash "slug" x) (gethash "id" x)))
-						 (gethash "repositories" data)))))))
-
-(travis-get-active-repositories "AuPath")
-(setq travis-owned-repos nil)
-
-travis-owned-repos
-
-(second (assoc "AuPath/ProvaJavaProgetto" travis-owned-repos))
-
-(defun travis-refresh-data ()
-  (interactive)
-  (travis-get-active-repositories travis-user-login))
-
-(defun travis-restart-build ()
-  (interactive)
-  (request
-    (format "%s/build/%s/restart" travis-api-url (read-string "Build ID: "))
-    :type "POST"
-    :headers travis-headers
-    :success (message "restarted build successfully")))
-
-(defun travis-cancel-build ()
-  (interactive)
-  (request
-    (format "%s/build/%s/cancel" travis-api-url (read-string "Build ID: "))
-    :type "POST"
-    :headers travis-headers
-    :success (message "cancelled builds successfully")))
-
-(defun travis-get-organizations ()
-  (request
-    (format "%s/orgs" travis-api-url)
-    :type "GET"
-    :headers travis-headers
-    :parser travis-json-parser-options
-    :success (cl-function
-	      (lambda (&key data &allow-other-keys)
-		(setq travis-user-organizations
-		      (mapcar (lambda (x) (gethash "login" x))
-			      (gethash "organizations" data)))))))
-
-(provide 'travis-api)
-;;; travis-api.el ends here
+(provide 'new-travis-api)
+;;; new-travis-api.el ends here
