@@ -1,0 +1,20 @@
+# Created by https://www.gitignore.io/api/elisp
+# Edit at https://www.gitignore.io/?templates=elisp
+
+### Elisp ###
+# Compiled
+*.elc
+
+# Packaging
+.cask
+
+# Backup files
+*~
+
+# Undo-tree save-files
+*.~undo-tree
+
+travis-test-config.el
+prova_verb.org
+
+# End of https://www.gitignore.io/api/elisp
