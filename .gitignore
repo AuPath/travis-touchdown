@@ -15,5 +15,6 @@
 *.~undo-tree
 
 travis-test-config.el
+prova_verb.org
 
 # End of https://www.gitignore.io/api/elisp
