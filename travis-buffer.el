@@ -1,9 +1,9 @@
-;;; travis-api.el --- Interface to Travis CI API     -*- lexical-binding: t; -*-
+;;; travis-buffer.el ---                             -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020  Aurelio
 
 ;; Author: Aurelio <aurelio@aurelio-pc>
-;; Keywords: convenience
+;; Keywords: 
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,22 +20,19 @@
 
 ;;; Commentary:
 
+;;
+
+
 ;;; Code:
 
-(add-to-list 'load-path "~/Projects/Emacs-test")
+(defun travis-show-buffer-with-data (buffer-name data)
+  "Open a buffer named BUFFER-NAME and insert DATA."
+  (with-current-buffer (get-buffer-create buffer-name)
+    (erase-buffer)
+    (insert data)
+    (pop-to-buffer (current-buffer))
+    (goto-char (point-min))))
 
-(require 'request)
-(require 'json)
-(require 'travis-urls)
-(require 'travis-bookmarks)
-(require 'travis-urls)
-(require 'travis-users)
-(require 'travis-token)
-(require 'travis-headers)
-(require 'travis-builds)
-(require 'travis-test-config)
-(require 'travis-buffer)
-(require 'travis-helper)
 
-(provide 'travis-api)
-;;; travis-api.el ends here
+(provide 'travis-buffer)
+;;; travis-buffer.el ends here

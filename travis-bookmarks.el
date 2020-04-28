@@ -22,6 +22,7 @@
 
 ;;; Code:
 
+
 (defvar travis-bookmarked-repos nil)
 
 (defun travis-show-bookmarked-repos ()
@@ -43,6 +44,15 @@
 					  (completing-read
 					   "Users: "
 					   travis-user-list)))))
+
+(defun travis-delete-repo-from-bookmarks-helper (repo-slug)
+  "Delete REPO-SLUG from TRAVIS-BOOKMARKED-REPOS."
+  (setq travis-bookmarked-repos (delete repo-slug travis-bookmarked-repos)))
+
+(defun travis-delete-repo-from-bookmarks ()
+  (interactive)
+  (travis-delete-repo-from-bookmarks-helper (completing-read "Repo: " travis-bookmarked-repos)))
+
 (provide 'travis-bookmarks)
 ;;; travis-bookmarks.el ends here
 

@@ -1,9 +1,9 @@
-;;; travis-api.el --- Interface to Travis CI API     -*- lexical-binding: t; -*-
+;;; travis-token.el ---                              -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020  Aurelio
 
 ;; Author: Aurelio <aurelio@aurelio-pc>
-;; Keywords: convenience
+;; Keywords: 
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,22 +20,22 @@
 
 ;;; Commentary:
 
+;; 
+
 ;;; Code:
 
-(add-to-list 'load-path "~/Projects/Emacs-test")
+(defvar travis-token nil)
 
-(require 'request)
-(require 'json)
-(require 'travis-urls)
-(require 'travis-bookmarks)
-(require 'travis-urls)
-(require 'travis-users)
-(require 'travis-token)
-(require 'travis-headers)
-(require 'travis-builds)
-(require 'travis-test-config)
-(require 'travis-buffer)
-(require 'travis-helper)
+(defun travis-set-token ()
+  "Interactively set travis secret token."
+  (interactive)
+  (setq travis-token (read-string "Insert travis token: "))
+  (travis-set-headers travis-token))
 
-(provide 'travis-api)
-;;; travis-api.el ends here
+(defun travis-show-token ()
+  "Interactively show Travis token."
+  (interactive)
+  (message "Travis token: %s" travis-token))
+
+(provide 'travis-token)
+;;; travis-token.el ends here

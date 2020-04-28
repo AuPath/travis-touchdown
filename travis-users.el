@@ -32,27 +32,19 @@
 
 (defun travis-refresh-user-list ()
   "Add orgs to user list."
+  (add-to-list 'travis-user-list travis-user-login)
   (mapc (lambda (x) (add-to-list 'travis-user-list x)) (travis-request-user-orgs)))
 
-(defun travis-add-user ()
-  "Add USER to list of known users TRAVIS-USER-LIST."
-  (interactive)
-  (add-to-list 'travis-user-list (read-string "User login: ")))
-
-(defun travis-delete-repo-from-bookmarks (repo-slug)
-  "Delete REPO-SLUG from TRAVIS-BOOKMARKED-REPOS."
-  (setq travis-bookmarked-repos (delete repo-slug travis-bookmarked-repos)))
-
-(defun travis-set-user ()
+(defun travis-set-user-login ()
   "Interactively set Travis's username to be used in requests."
   (interactive)
-  (setq travis-user-login (read-string "User login: ")))
+  (setq travis-user-login (read-string "User login: "))
+  (travis-refresh-user-list))
 
-(defun travis-show-user ()
+(defun travis-show-user-login ()
   "Interactively show Travis username."
   (interactive)
   (message "User: %s" travis-user-login))
-
 
 (provide 'travis-users)
 ;;; travis-users.el ends here

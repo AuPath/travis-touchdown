@@ -1,9 +1,9 @@
-;;; travis-api.el --- Interface to Travis CI API     -*- lexical-binding: t; -*-
+;;; travis-headers.el ---                            -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020  Aurelio
 
 ;; Author: Aurelio <aurelio@aurelio-pc>
-;; Keywords: convenience
+;; Keywords: 
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,22 +20,17 @@
 
 ;;; Commentary:
 
+;; 
+
 ;;; Code:
 
-(add-to-list 'load-path "~/Projects/Emacs-test")
+(defvar travis-headers nil)
 
-(require 'request)
-(require 'json)
-(require 'travis-urls)
-(require 'travis-bookmarks)
-(require 'travis-urls)
-(require 'travis-users)
-(require 'travis-token)
-(require 'travis-headers)
-(require 'travis-builds)
-(require 'travis-test-config)
-(require 'travis-buffer)
-(require 'travis-helper)
+(defun travis-set-headers (token)
+  "Set token for http requests with security TOKEN."
+  (setq travis-headers (backquote (("Travis-API-Version" . "3")
+				   ("User-Agent" . "API Explorer")
+				   ("Authorization" . ,(format "token %s" token))))))
 
-(provide 'travis-api)
-;;; travis-api.el ends here
+(provide 'travis-headers)
+;;; travis-headers.el ends here
