@@ -26,6 +26,7 @@
 
 (require 'request)
 (require 'json)
+(require 'travis-faces)
 (require 'travis-urls)
 (require 'travis-bookmarks)
 (require 'travis-urls)
@@ -36,6 +37,20 @@
 (require 'travis-test-config)
 (require 'travis-buffer)
 (require 'travis-helper)
+
+(defgroup travis nil
+  "Travis interface for emacs."
+  :prefix "travis-"
+  :group 'tools)
+
+(define-minor-mode travis-mode
+  "Travis."
+  :lighter "Trv"
+  )
+
+(define-derived-mode travis-builds-mode special-mode "Travis[Builds]"
+  "Major mode for displaying build data from Travis CI"
+  (travis-set-faces-builds))
 
 (provide 'travis-api)
 ;;; travis-api.el ends here

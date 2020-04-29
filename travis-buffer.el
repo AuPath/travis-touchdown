@@ -30,6 +30,7 @@
   (with-current-buffer (get-buffer-create buffer-name)
     (erase-buffer)
     (insert data)
+    (travis-builds-mode)
     (pop-to-buffer (current-buffer))
     (goto-char (point-min))))
 
