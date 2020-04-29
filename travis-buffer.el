@@ -31,9 +31,7 @@
     (erase-buffer)
     (insert data)
     (travis-builds-mode)
-    (pop-to-buffer (current-buffer))
+    (pop-to-buffer (buffer-name))
     (goto-char (point-min))))
 
-
-(provide 'travis-buffer)
 ;;; travis-buffer.el ends here

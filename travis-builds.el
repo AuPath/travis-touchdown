@@ -39,7 +39,7 @@
 		      (json-read)))
 	  :success (cl-function
 		    (lambda (&key data &allow-other-keys)
-		      (travis-show-buffer-with-data (format "*BUIlDS[%s]*" chosen-repo)
+		      (travis-show-buffer-with-data (format "*BUILDS[%s]*" chosen-repo)
 						    (mapconcat 'travis-build-to-string
 							       (assoc-default 'builds data)
 							       "\n\n")))))))

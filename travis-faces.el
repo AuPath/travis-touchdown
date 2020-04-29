@@ -28,16 +28,20 @@
 				    :weight bold))
   "Face for highlighting travis build keywords.")
 
-(defface travis-failed-build '((t :inherit font-lock-warning-face
-				  :weight bold))
+(defface travis-failed-build '((t :inherit error))
   "Face for highlighting a failed travis build.")
+
+(defface travis-successful-build '((t :inherit success))
+  "Face for highlighting a successful travis build.")
 
 (defvar travis-symbols-build '("Repository" "Branch" "Commit" "Id" "Number" "State" "Previous state" "Started at" "Finished at" "Duration"))
 
 
 (defun travis-set-faces-builds ()
   "Set faces for travis build buffer."
-  (font-lock-add-keywords nil '(("\\(Branch\\|Commit\\|Duration\\|Finished at\\|Id\\|Number\\|Previous state\\|Repository\\|Sta\\(?:rted at\\|te\\)\\)" . 'travis-builds-keyword))))
-
+  (font-lock-add-keywords nil '(
+				("\\(Branch\\|Commit\\|Duration\\|Finished at\\|Id\\|Number\\|Previous state\\|Repository\\|Sta\\(?:rted at\\|te\\)\\)" . 'travis-builds-keyword)
+				("\\(: passed\\)" . 'travis-successful-build)
+				("\\(: failed\\)" . 'travis-failed-build))))
 (provide 'travis-faces)
 ;;; travis-faces.el ends here
