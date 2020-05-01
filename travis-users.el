@@ -33,7 +33,7 @@
 (defun travis-refresh-user-list ()
   "Add orgs to user list."
   (add-to-list 'travis-user-list travis-user-login)
-  (mapc (lambda (x) (add-to-list 'travis-user-list x)) (travis-request-user-orgs)))
+  (mapc (lambda (x) (add-to-list 'travis-user-list x)) (travis-orgs-for-user)))
 
 (defun travis-set-user-login ()
   "Interactively set Travis's username to be used in requests."

@@ -41,6 +41,14 @@
 
 (defvar travis-url-to-orgs (format "%s/orgs" travis-api-url))
 
+(defun travis-url-build-restart (build-id)
+  "Return url to restart build with BUILD-ID."
+  (format "%s/build/%s/restart" travis-api-url build-id))
+
+(defun travis-url-build-cancel (build-id)
+  "Return url to cancel build with BUILD-ID."
+  (format "%s/build/%s/cancel" travis-api-url build-id))
+
 (defun travis-url-repo-branches (repo-slug)
   "Return url to get branches for REPO-SLUG."
   (format "%s/repo/%s/branches" travis-api-url (url-hexify-string repo-slug)))

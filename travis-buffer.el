@@ -34,4 +34,5 @@
     (pop-to-buffer (buffer-name))
     (goto-char (point-min))))
 
+(provide 'travis-buffer)
 ;;; travis-buffer.el ends here

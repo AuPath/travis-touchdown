@@ -40,7 +40,7 @@
   (interactive)
   (add-to-list 'travis-bookmarked-repos (completing-read
 					 "Repos: "
-					 (travis-request-user-repos
+					 (travis-user-repos
 					  (completing-read
 					   "Users: "
 					   travis-user-list)))))

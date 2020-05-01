@@ -24,43 +24,53 @@
 
 ;;; Code:
 
-(defun travis-request-user-repos (user)
-  "Request user owned repos for user stored in owner-repos."
+(defun travis-generic-request (method url)
+  "Generic HTTP request."
   (let ((response
 	 (request
-	   (travis-url-owned-repos user)
-	   :type "GET"
+	   url
+	   :type method
 	   :headers travis-headers
 	   :parser 'json-read
-	   :sync t
-	   )))
-    (mapcar (lambda (x) (assoc-default 'slug x))
-	    (assoc-default 'repositories (request-response-data response)))))
-
-(defun travis-request-user-repo-branches (repo-name)
-  "Request user owned repo branches for REPO-NAME."
-  (let ((response
-  (request
-    (travis-url-repo-branches repo-name)
-    :type "GET"
-    :headers travis-headers
-    :parser 'json-read
-    :sync t
-    )))
+	   :sync t )))
     (request-response-data response)))
 
-(defun travis-request-user-orgs ()
+;; 160097308
+(defun travis-active-repos (user)
+  "Return a list with repo-slugs of repositories owned by user that are being built."
+  (travis-show-buffer-with-data "*ACTIVE-BUILDS*" (mapconcat 'travis-active-build-to-string
+							     (assoc-default 'builds
+									    (travis-generic-request "GET"
+												    (travis-url-active-builds user)))
+							     "\n\n")))
+
+(defun travis-active-build-to-string (active-build)
+  "ACTIVE-BUILD to string."
+  (concat (format "Repository: %s\n" (assoc-default 'slug
+					      (assoc-default 'repository active-build)))
+	  (format "Branch: %s\n" (assoc-default 'name
+						(assoc-default 'branch active-build)))))
+
+(defun travis-user-repos (user)
+  "Return a list of repo-slugs of repos owned by USER."
+  (mapcar (lambda (x) (assoc-default 'slug x))
+	  (assoc-default 'repositories
+			 (travis-generic-request "GET"
+						 (travis-url-owned-repos user)))))
+
+(defun travis-branches-for-repo (repo-slug)
+  "Request user owned repo branches for REPO-SLUG."
+  (mapcar (lambda (x) (assoc-default 'name x))
+	  ( assoc-default 'branches
+			  (travis-generic-request "GET"
+						  (travis-url-repo-branches repo-slug)))))  
+
+(defun travis-orgs-for-user ()
   "Return a list of the organizations the user belongs to."
-  (let ((response
-	 (request
-	   travis-url-to-orgs
-	   :type "GET"
-	   :headers travis-headers
-	   :parser 'json-read
-	   :sync t
-	   )))
-    (mapcar (lambda (x) (assoc-default 'login x))
-	    (assoc-default 'organizations (request-response-data response)))))
+  (mapcar (lambda (x) (assoc-default 'login x))
+	  (assoc-default 'organizations (travis-generic-request "GET"
+								travis-url-to-orgs))))
 
 (provide 'travis-helper)
 ;;; travis-helper.el ends here
+  

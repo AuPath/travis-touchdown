@@ -22,7 +22,7 @@
 
 ;;; Code:
 
-(add-to-list 'load-path "~/Projects/Emacs-test")
+(add-to-list 'load-path "~/Projects/travis-elisp")
 
 (require 'request)
 (require 'json)
