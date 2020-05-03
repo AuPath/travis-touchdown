@@ -35,8 +35,6 @@
 	   :sync t )))
     (request-response-data response)))
 
-
-
 ;; 160097308
 (defun travis-active-repos (user)
   "Return a-list with data on repositories owned by user that are being built."
@@ -47,7 +45,8 @@
   (concat (format "Repository: %s\n" (assoc-default 'slug
 						    (assoc-default 'repository active-build)))
 	  (format "Branch: %s\n" (assoc-default 'name
-						(assoc-default 'branch active-build)))))
+						(assoc-default 'branch active-build)))
+	  (format "Id: %s\n" (assoc-default 'id build))))
 
 (defun travis-user-repos (user)
   "Return a list of repo-slugs of repos owned by USER."

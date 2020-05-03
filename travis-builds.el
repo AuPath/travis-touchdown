@@ -39,6 +39,13 @@
 			  (travis-url-build-restart
 			   (read-string "Build id: " (thing-at-point 'word)))))
 
+(defun travis-cancel-build ()
+  "Cancel a build."
+  (interactive)
+  (travis-generic-request "POST"
+			  (travis-url-build-cancel
+			   (read-string "Build id: " (thing-at-point 'word)))))
+
 ;; (defun travis-restart-build ()
 ;;   "Restart a build."
 ;;   (interactive)
