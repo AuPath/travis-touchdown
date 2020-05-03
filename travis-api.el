@@ -45,8 +45,7 @@
 
 (define-minor-mode travis-mode
   "Travis."
-  :lighter "Trv"
-  )
+  :lighter "Trv")
 
 (define-derived-mode travis-builds-mode special-mode "Travis[Builds]"
   "Major mode for displaying build data from Travis CI"

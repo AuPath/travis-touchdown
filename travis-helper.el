@@ -35,19 +35,17 @@
 	   :sync t )))
     (request-response-data response)))
 
+
+
 ;; 160097308
 (defun travis-active-repos (user)
-  "Return a list with repo-slugs of repositories owned by user that are being built."
-  (travis-show-buffer-with-data "*ACTIVE-BUILDS*" (mapconcat 'travis-active-build-to-string
-							     (assoc-default 'builds
-									    (travis-generic-request "GET"
-												    (travis-url-active-builds user)))
-							     "\n\n")))
+  "Return a-list with data on repositories owned by user that are being built."
+  (assoc-default 'builds (travis-generic-request "GET" (travis-url-active-builds user))))
 
 (defun travis-active-build-to-string (active-build)
   "ACTIVE-BUILD to string."
   (concat (format "Repository: %s\n" (assoc-default 'slug
-					      (assoc-default 'repository active-build)))
+						    (assoc-default 'repository active-build)))
 	  (format "Branch: %s\n" (assoc-default 'name
 						(assoc-default 'branch active-build)))))
 
@@ -63,13 +61,17 @@
   (mapcar (lambda (x) (assoc-default 'name x))
 	  ( assoc-default 'branches
 			  (travis-generic-request "GET"
-						  (travis-url-repo-branches repo-slug)))))  
+						  (travis-url-repo-branches repo-slug)))))
 
 (defun travis-orgs-for-user ()
   "Return a list of the organizations the user belongs to."
   (mapcar (lambda (x) (assoc-default 'login x))
 	  (assoc-default 'organizations (travis-generic-request "GET"
 								travis-url-to-orgs))))
+
+(defun travis-show-data (buf-name to-string data)
+  "Open buffer with name BUF-NAME, where DATA is shown after being modeled by TO-STRING function name."
+  (travis-show-buffer-with-data buf-name (mapconcat to-string data "\n\n")))
 
 (provide 'travis-helper)
 ;;; travis-helper.el ends here
