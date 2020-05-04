@@ -31,17 +31,28 @@
 (defface travis-failed-build '((t :inherit error))
   "Face for highlighting a failed travis build.")
 
+(defface travis-warning-build '((t :inherit warning))
+  "Face for highlighting a warning travis build.")
+
 (defface travis-successful-build '((t :inherit success))
   "Face for highlighting a successful travis build.")
 
-(defvar travis-symbols-build '("Repository" "Branch" "Commit" "Id" "Number" "State" "Previous state" "Started at" "Finished at" "Duration"))
+(defvar travis-symbols-build '("Repository" "Branch" "Commit" "Id" "Number" "State" "Previous state" "Started at" "Finished at" "Duration" "Message"))
 
 
 (defun travis-set-faces-builds ()
   "Set faces for travis build buffer."
   (font-lock-add-keywords nil '(
-				("\\(Branch\\|Commit\\|Duration\\|Finished at\\|Id\\|Number\\|Previous state\\|Repository\\|Sta\\(?:rted at\\|te\\)\\)" . 'travis-builds-keyword)
-				("\\(: passed\\)" . 'travis-successful-build)
-				("\\(: failed\\)" . 'travis-failed-build))))
+				("\\(\\(?:Branch\\|Commit\\|Duration\\|Finished at\\|Id\\|Message\\|Number\\|Previous state\\|Repository\\|Sta\\(?:rted at\\|te\\)\\):\\)" . 'travis-builds-keyword)
+				("\\(passed\\)" . 'travis-successful-build)
+				("\\(failed\\)" . 'travis-failed-build)
+				("\\(\\(?:cancel\\|restart\\)ed\\)" . 'travis-warning-build))))
+
+(regexp-opt '("canceled" "restarted") t)
+
+(regexp-opt '("passed") t)
+
+(regexp-opt (mapcar (lambda (x) (format "%s:" x)) travis-symbols-build) t)
+
 (provide 'travis-faces)
 ;;; travis-faces.el ends here

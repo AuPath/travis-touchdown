@@ -79,7 +79,8 @@
 	  (format "Finished at: %s\n" (assoc-default 'finished_at build))
 	  (format "Duration: %s\n" (format-seconds
 				    "%H %M %S"
-				    (assoc-default 'duration build)))))
+				    (assoc-default 'duration build)))
+	  (format "Message: %s\n" (assoc-default 'message (assoc-default 'commit build)))))
 
 (defun travis-active-build-to-string (active-build)
   "ACTIVE-BUILD to string."

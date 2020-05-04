@@ -24,8 +24,15 @@
 
 
 ;; API URLs
-(defconst travis-url-api "https://api.travis-ci.com")
-(defconst travis-url-lint (concat travis-url-api "/lint"))
+(defconst travis-url-api "https://api.travis-ci.com"
+  "Url to base api for Travis")
+
+(defconst travis-url-lint (concat travis-url-api "/lint")
+  "Url to travis linter")
+
+(defun travis-url-jobs (build-id)
+    "Url to get jobs for build with BUILD-ID."
+    (format "%s/build/%s/jobs" travis-url-api build-id))
 
 (defun travis-url-owned-repos (user-login)
   "Return url to repositories owned by USER-LOGIN."
@@ -52,6 +59,8 @@
 (defun travis-url-repo-branches (repo-slug)
   "Return url to get branches for REPO-SLUG."
   (format "%s/repo/%s/branches" travis-url-api (url-hexify-string repo-slug)))
+
+
 
 (provide 'travis-urls)
 ;;; travis-urls.el ends here
