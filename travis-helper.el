@@ -24,13 +24,13 @@
 
 ;;; Code:
 
-(defun travis-generic-request (method url)
+(defun travis-generic-request (method url headers)
   "Generic HTTP request."
   (let ((response
 	 (request
 	   url
 	   :type method
-	   :headers travis-headers
+	   :headers headers
 	   :parser 'json-read
 	   :sync t )))
     (request-response-data response)))
@@ -40,7 +40,8 @@
   (mapcar (lambda (x) (assoc-default 'slug x))
 	  (assoc-default 'repositories
 			 (travis-generic-request "GET"
-						 (travis-url-owned-repos user)))))
+						 (travis-url-owned-repos user)
+						 travis-headers))))
 
 (defun travis-branches-for-repo (repo-slug)
   "Request user owned repo branches for REPO-SLUG."
@@ -53,7 +54,8 @@
   "Return a list of the organizations the user belongs to."
   (mapcar (lambda (x) (assoc-default 'login x))
 	  (assoc-default 'organizations (travis-generic-request "GET"
-								travis-url-to-orgs))))
+								travis-url-to-orgs
+								travis-headers))))
 
 (defun travis-show-data (buf-name to-string data)
   "Open buffer with name BUF-NAME, where DATA is shown after being modeled by TO-STRING function name."

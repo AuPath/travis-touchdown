@@ -25,12 +25,16 @@
 ;;; Code:
 
 (defvar travis-headers nil)
+(defvar travis-headers-log nil)
 
 (defun travis-set-headers (token)
   "Set token for http requests with security TOKEN."
   (setq travis-headers (backquote (("Travis-API-Version" . "3")
 				   ("User-Agent" . "API Explorer")
-				   ("Authorization" . ,(format "token %s" token))))))
+				   ("Authorization" . ,(format "token %s" token)))))
+  (setq travis-headers-log (append travis-headers '(("Accept" . "text/plain")))))
+
+
 
 (provide 'travis-headers)
 ;;; travis-headers.el ends here

@@ -37,14 +37,16 @@
   (interactive)
   (travis-generic-request "POST"
 			  (travis-url-build-restart
-			   (read-string "Build id: " (thing-at-point 'word)))))
+			   (read-string "Build id: " (thing-at-point 'word)))
+			  travis-headers))
 
 (defun travis-cancel-build ()
   "Cancel a build."
   (interactive)
   (travis-generic-request "POST"
 			  (travis-url-build-cancel
-			   (read-string "Build id: " (thing-at-point 'word)))))
+			   (read-string "Build id: " (thing-at-point 'word)))
+			  travis-headers))
 
 (defun travis-show-builds-for-repo()
     "Show builds for specified repo."
@@ -60,12 +62,16 @@
 (defun travis-build-data (repo-slug)
   "Get all build data for repo REPO-SLUG."
   (travis-generic-request "GET"
-			  (travis-url-builds-for-repo repo-slug)))
+			  (travis-url-builds-for-repo repo-slug)
+			  travis-headers))
 
 ;; 160097308
 (defun travis-active-repos (user)
   "Return a-list with data on repositories owned by user that are being built."
-  (assoc-default 'builds (travis-generic-request "GET" (travis-url-active-builds user))))
+  (assoc-default 'builds (travis-generic-request
+			  "GET"
+			  (travis-url-active-builds user)
+			  travis-headers)))
 
 (defun travis-build-to-string (build)
   "Return string to insert into display buffer for BUILD."

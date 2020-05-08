@@ -24,11 +24,22 @@
 
 ;;; Code:
 
-(defun travis-jobs-all ()
-  "Return all jobs available to current user."
+(defun travis-jobs-for-build ()
+  "Return all jobs to build id at point."
   (interactive)
-  (travis-generic-request "GET" (travis-url-jobs
-				 (read-string "Build id: " (thing-at-point 'word)))))
+  (travis-generic-request "GET" (travis-url-jobs-for-build
+				 (read-string "Build id: " (thing-at-point 'word)))
+				 travis-headers))
+
+(defun travis-job-log ()
+  "Return log for job with job id at point."
+  (interactive)
+  (assoc-default 'content (travis-generic-request "GET" (travis-url-job-log
+				 (read-string "Job id: " (thing-at-point 'word)))
+			  travis-headers)))
+
+;; (travis-show-buffer-with-data "Log" (replace-regexp-in-string "" "\n" (travis-job-log)))
+
 
 (provide 'travis-jobs)
 ;;; travis-jobs.el ends here

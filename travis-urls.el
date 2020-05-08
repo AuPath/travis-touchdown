@@ -30,13 +30,17 @@
 (defconst travis-url-lint (concat travis-url-api "/lint")
   "Url to travis linter")
 
-(defun travis-url-jobs (build-id)
+(defun travis-url-jobs-for-build (build-id)
     "Url to get jobs for build with BUILD-ID."
     (format "%s/build/%s/jobs" travis-url-api build-id))
 
 (defun travis-url-owned-repos (user-login)
   "Return url to repositories owned by USER-LOGIN."
   (format "%s/owner/%s/repos" travis-url-api user-login))
+
+(defun travis-url-job-log (job-id)
+  "Return url to log on job with JOB-ID."
+  (format "%s/job/%s/log" travis-url-api job-id))
 
 (defun travis-url-builds-for-repo (repo-slug)
   "Return url for getting builds for repo with REPO-SLUG."

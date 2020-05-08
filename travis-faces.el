@@ -46,9 +46,9 @@
 				("\\(\\(?:Branch\\|Commit\\|Duration\\|Finished at\\|Id\\|Message\\|Number\\|Previous state\\|Repository\\|Sta\\(?:rted at\\|te\\)\\):\\)" . 'travis-builds-keyword)
 				("\\(passed\\)" . 'travis-successful-build)
 				("\\(failed\\)" . 'travis-failed-build)
-				("\\(\\(?:cancel\\|restart\\)ed\\)" . 'travis-warning-build))))
+				("\\(\\(?:c\\(?:ancel\\|reat\\)\\|restart\\)ed\\)" . 'travis-warning-build))))
 
-(regexp-opt '("canceled" "restarted") t)
+(regexp-opt '("canceled" "restarted" "created") t)
 
 (regexp-opt '("passed") t)
 

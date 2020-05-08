@@ -37,6 +37,7 @@
 (require 'travis-test-config)
 (require 'travis-buffer)
 (require 'travis-helper)
+(require 'travis-jobs)
 
 (defgroup travis nil
   "Travis interface for emacs."
