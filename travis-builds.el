@@ -24,6 +24,8 @@
 
 ;;; Code:
 
+(require 'travis-jobs)
+
 (defun travis-show-active-builds ()
   "Show active builds in a buffer."
   (interactive)
@@ -86,7 +88,8 @@
 	  (format "Duration: %s\n" (format-seconds
 				    "%H %M %S"
 				    (assoc-default 'duration build)))
-	  (format "Message: %s\n" (assoc-default 'message (assoc-default 'commit build)))))
+	  (format "Message: %s\n" (assoc-default 'message
+						 (assoc-default 'commit build)))))
 
 (defun travis-active-build-to-string (active-build)
   "ACTIVE-BUILD to string."

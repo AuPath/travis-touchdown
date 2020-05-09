@@ -3,7 +3,7 @@
 ;; Copyright (C) 2020  Aurelio
 
 ;; Author: Aurelio <aurelio@aurelio-pc>
-;; Keywords: 
+;; Keywords:
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -25,16 +25,17 @@
 ;;; Code:
 
 (defface travis-builds-keyword '((t :inherit font-lock-builtin-face
-				    :weight bold))
+				    :weight bold)
+				 :group 'travis-builds-mode)
   "Face for highlighting travis build keywords.")
 
-(defface travis-failed-build '((t :inherit error))
+(defface travis-failed-build '((t :inherit error) :group 'travis-builds-mode)
   "Face for highlighting a failed travis build.")
 
-(defface travis-warning-build '((t :inherit warning))
+(defface travis-warning-build '((t :inherit warning) :group 'travis-builds-mode)
   "Face for highlighting a warning travis build.")
 
-(defface travis-successful-build '((t :inherit success))
+(defface travis-successful-build '((t :inherit success) :group 'travis-builds-mode)
   "Face for highlighting a successful travis build.")
 
 (defvar travis-symbols-build '("Repository" "Branch" "Commit" "Id" "Number" "State" "Previous state" "Started at" "Finished at" "Duration" "Message"))

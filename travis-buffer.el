@@ -27,6 +27,8 @@
 
 (defun travis-show-buffer-with-data (buffer-name data)
   "Open a buffer named BUFFER-NAME and insert DATA."
+  (when (get-buffer buffer-name)
+    (kill-buffer buffer-name))
   (with-current-buffer (get-buffer-create buffer-name)
     (erase-buffer)
     (insert data)
