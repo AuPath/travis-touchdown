@@ -1,0 +1,11 @@
+* Flow of package usage
+  Config user (can be more than one, orgs count as users)
+  Select repositories for user (save in a file)
+  Each line is "User" "Repo"
+
+
+* Usage
+  While a project is open, travis show build for repo.
+  Associate project root with repo.
+  
+  

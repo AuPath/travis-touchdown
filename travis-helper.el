@@ -63,4 +63,3 @@
 
 (provide 'travis-helper)
 ;;; travis-helper.el ends here
-  

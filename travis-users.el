@@ -26,7 +26,7 @@
 (defvar travis-user-list nil)
 
 (defun travis-reset-user-list ()
-  "Set variable TRAVIS-USER-LIST to nil"
+  "Set variable TRAVIS-USER-LIST to nil."
   (interactive)
   (setq travis-user-list nil))
 
