@@ -26,7 +26,6 @@
 
 (require 'request)
 (require 'json)
-(require 'travis-test-config)
 
 (defgroup travis nil
   "Travis interface for emacs."
@@ -59,7 +58,6 @@
 
 (defvar travis-symbols-build '("Repository" "Branch" "Commit" "Id" "Number" "State" "Previous state" "Started at" "Finished at" "Duration" "Message"))
 
-
 (defun travis-set-faces-builds ()
   "Set faces for travis build buffer."
   (font-lock-add-keywords nil '(
@@ -88,6 +86,29 @@
 		      'travis-active-build-to-string
 		      (travis-active-repos chosen-user))))
 
+(defvar travis-memo-repos nil
+  "Repos associated with a project root.")
+
+(defun travis-associate-project-root-to-repo (proot repo-slug)
+  "Add pair (PROOT . REPO-SLUG) to travis-memo-repos."
+  (when (not (assoc-default proot travis-memo-repos))
+      (setq travis-memo-repos (append travis-memo-repos
+				      (list (cons proot repo-slug))))))
+
+(defun travis-repo-slug-from-project (proot)
+  "Return REPO-SLUG for project in PROOT."
+  (assoc-default proot travis-memo-repos))
+
+(travis-associate-project-root-to-repo (vc-root-dir)
+				       "AuPath/Clojure-Texas-Hold-Em")
+
+
+
+
+
+
+
+
 (defun travis-restart-build ()
   "Restart a build."
   (interactive)
@@ -107,9 +128,12 @@
 (defun travis-show-builds-for-repo()
     "Show builds for specified repo."
   (interactive)
-  (let ((chosen-repo (ido-completing-read
-		      "Repositories: "
-		      travis-bookmarked-repos)))
+  (let* ((project-repo (assoc-default (vc-root-dir) travis-memo-repos))
+	 (chosen-repo (if project-repo
+			  project-repo
+			(ido-completing-read
+			 "Repositories: "
+			 travis-bookmarked-repos))))
     (travis-show-data (format "*BUILDS[%s]*" chosen-repo)
 		      'travis-build-to-string
 		      (assoc-default 'builds
@@ -156,8 +180,6 @@
 		  (assoc-default 'name
 				 (assoc-default 'branch active-build)))
 	  (format "Id: %s\n" (assoc-default 'id active-build))))
-
-
 
 (defun travis-add-repo-to-bookmarks ()
   "Add repo to TRAVIS-BOOKMARKED-REPOS."
@@ -291,24 +313,6 @@
   (interactive)
   (message "User: %s" travis-user-login))
 
-(projectile-project-root)
-
-;; project-root . repo
-(defvar project-repo-list '(("/home/aurelio/Projects/travis-elisp/"
-			     . "AuPath/ProvaJavaProgetto")))
-
-(assoc-default (projectile-project-root) project-repo-list)
- 
-
-(defun travis-associate-project-to-repo ()
-  "Add project root to known repo."
-  (add-to-list 'project-repo-list (list (projectile-project-root)
-					(completing-read
-					 "Repos: "
-					 (travis-user-repos
-					  (completing-read
-					   "Users: "
-					   travis-user-list))))))
 (defun travis-lint-config-file ()
   "Lint config file."
   (interactive)
@@ -350,6 +354,13 @@
    (format " Duration: %s\n" (format-seconds
 			      "%H %M %S"
 			      (assoc-default 'duration job)))))
+
+(setq travis-user-login "AuPath")
+(setq travis-token "H60yeYCilDQ-htqJqjYHpw")
+(travis-set-headers travis-token)
+
+(add-to-list 'travis-user-list travis-user-login)
+(add-to-list 'travis-bookmarked-repos "AuPath/ProvaJavaProgetto")
 
 (provide 'travis-api)
 ;;; travis-api.el ends here
