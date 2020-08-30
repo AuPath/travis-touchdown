@@ -7,5 +7,16 @@
 * Usage
   While a project is open, travis show build for repo.
   Associate project root with repo.
+
+* Main functions
+  Show latest build with optionally specifing how many to show.
+  Detect branch and request build data for that. otherwise ask.
+  
+  Keystrokes:
+  - g :: refresh, redo request.
+  - j :: get job info
+
+
+    
   
   

@@ -68,6 +68,7 @@
 
 (defvar travis-headers nil)
 (defvar travis-headers-log nil)
+(defvar travis-token nil)
 
 (defun travis-set-headers (token)
   "Set token for http requests with security TOKEN."
@@ -76,7 +77,42 @@
 				   ("Authorization" . ,(format "token %s" token)))))
   (setq travis-headers-log (append travis-headers '(("Accept" . "text/plain")))))
 
-(defvar travis-token nil)
+(defconst travis-url-api "https://api.travis-ci.com"
+  "Url to base api for Travis.")
+
+(defun travis-url-jobs-for-build (build-id)
+    "Url to get jobs for build with BUILD-ID."
+    (format "%s/build/%s/jobs" travis-url-api build-id))
+
+(defun travis-url-owned-repos (user-login)
+  "Return url to repositories owned by USER-LOGIN."
+  (format "%s/owner/%s/repos" travis-url-api user-login))
+
+(defun travis-url-job-log (job-id)
+  "Return url to log on job with JOB-ID."
+  (format "%s/job/%s/log" travis-url-api job-id))
+
+(defun travis-url-builds-for-repo (repo-slug)
+  "Return url for getting builds for repo with REPO-SLUG."
+  (format "%s/repo/%s/builds" travis-url-api (url-hexify-string repo-slug)))
+
+(defun travis-url-active-builds (user-login)
+  "Return url for getting active builds for user USER-LOGIN."
+  (format "%s/owner/%s/active" travis-url-api user-login))
+
+(defvar travis-url-to-orgs (format "%s/orgs" travis-url-api))
+
+(defun travis-url-build-restart (build-id)
+  "Return url to restart build with BUILD-ID."
+  (format "%s/build/%s/restart" travis-url-api build-id))
+
+(defun travis-url-build-cancel (build-id)
+  "Return url to cancel build with BUILD-ID."
+  (format "%s/build/%s/cancel" travis-url-api build-id))
+
+(defun travis-url-repo-branches (repo-slug)
+  "Return url to get branches for REPO-SLUG."
+  (format "%s/repo/%s/branches" travis-url-api (url-hexify-string repo-slug)))
 
 (defun travis-show-active-builds ()
   "Show active builds in a buffer."
@@ -89,11 +125,15 @@
 (defvar travis-memo-repos nil
   "Repos associated with a project root.")
 
+(defvar travis-repo-branches nil "Branches for each repo.")
+
 (defun travis-associate-project-root-to-repo (proot repo-slug)
   "Add pair (PROOT . REPO-SLUG) to travis-memo-repos."
   (when (not (assoc-default proot travis-memo-repos))
       (setq travis-memo-repos (append travis-memo-repos
 				      (list (cons proot repo-slug))))))
+
+
 
 (defun travis-repo-slug-from-project (proot)
   "Return REPO-SLUG for project in PROOT."
@@ -131,13 +171,19 @@
   (let* ((project-repo (assoc-default (vc-root-dir) travis-memo-repos))
 	 (chosen-repo (if project-repo
 			  project-repo
-			(ido-completing-read
-			 "Repositories: "
-			 travis-bookmarked-repos))))
-    (travis-show-data (format "*BUILDS[%s]*" chosen-repo)
-		      'travis-build-to-string
-		      (assoc-default 'builds
-				     (travis-build-data chosen-repo)))))
+			(progn
+			  (travis-associate-project-root-to-repo
+			   (vc-root-dir)
+			   (ido-completing-read
+			    "Repositories: "
+			    (travis-user-repos "AuPath")))
+			  (travis-repo-slug-from-project (vc-root-dir))))))
+	 (travis-show-data (format "*BUILDS[%s]*" chosen-repo)
+			   'travis-build-to-string
+			   (assoc-default 'builds
+					  (travis-build-data chosen-repo)))))
+
+(setq  travis-memo-repos nil)
 
 (defun travis-build-data (repo-slug)
   "Get all build data for repo REPO-SLUG."
@@ -247,89 +293,13 @@
   "Open buffer with name BUF-NAME, where DATA is shown after being modeled by TO-STRING function name."
   (travis-show-buffer-with-data buf-name (mapconcat to-string data "\n\n")))
 
-
-
-(defconst travis-url-api "https://api.travis-ci.com"
-  "Url to base api for Travis")
-
-(defconst travis-url-lint (concat travis-url-api "/lint")
-  "Url to travis linter")
-
-(defun travis-url-jobs-for-build (build-id)
-    "Url to get jobs for build with BUILD-ID."
-    (format "%s/build/%s/jobs" travis-url-api build-id))
-
-(defun travis-url-owned-repos (user-login)
-  "Return url to repositories owned by USER-LOGIN."
-  (format "%s/owner/%s/repos" travis-url-api user-login))
-
-(defun travis-url-job-log (job-id)
-  "Return url to log on job with JOB-ID."
-  (format "%s/job/%s/log" travis-url-api job-id))
-
-(defun travis-url-builds-for-repo (repo-slug)
-  "Return url for getting builds for repo with REPO-SLUG."
-  (format "%s/repo/%s/builds" travis-url-api (url-hexify-string repo-slug)))
-
-(defun travis-url-active-builds (user-login)
-  "Return url for getting active builds for user USER-LOGIN."
-  (format "%s/owner/%s/active" travis-url-api user-login))
-
-(defvar travis-url-to-orgs (format "%s/orgs" travis-url-api))
-
-(defun travis-url-build-restart (build-id)
-  "Return url to restart build with BUILD-ID."
-  (format "%s/build/%s/restart" travis-url-api build-id))
-
-(defun travis-url-build-cancel (build-id)
-  "Return url to cancel build with BUILD-ID."
-  (format "%s/build/%s/cancel" travis-url-api build-id))
-
-(defun travis-url-repo-branches (repo-slug)
-  "Return url to get branches for REPO-SLUG."
-  (format "%s/repo/%s/branches" travis-url-api (url-hexify-string repo-slug)))
-
 (defvar travis-user-login nil)
 (defvar travis-user-list nil)
-
-(defun travis-reset-user-list ()
-  "Set variable TRAVIS-USER-LIST to nil."
-  (interactive)
-  (setq travis-user-list nil))
 
 (defun travis-refresh-user-list ()
   "Add orgs to user list."
   (add-to-list 'travis-user-list travis-user-login)
   (mapc (lambda (x) (add-to-list 'travis-user-list x)) (travis-orgs-for-user)))
-
-(defun travis-set-user-login ()
-  "Interactively set Travis's username to be used in requests."
-  (interactive)
-  (setq travis-user-login (read-string "User login: "))
-  (travis-refresh-user-list))
-
-(defun travis-show-user-login ()
-  "Interactively show Travis username."
-  (interactive)
-  (message "User: %s" travis-user-login))
-
-(defun travis-lint-config-file ()
-  "Lint config file."
-  (interactive)
-  (request
-    travis-url-lint
-    :type "POST"
-    :files `(("yaml-file" . ,(current-buffer)))
-    :parser 'json-read
-    :success (cl-function
-           (lambda (&key data &allow-other-keys)
-             (message "I sent: %S" (assoc-default 'files data))))))
-
-(defun travis-jobs-for-build (build-id)
-  "Return all jobs for BUILD-ID at point."
-  (travis-generic-request "GET" (travis-url-jobs-for-build
-				 build-id)
-			  travis-headers))
 
 (defun travis-job-log ()
   "Return log for job with job id at point."
@@ -354,13 +324,6 @@
    (format " Duration: %s\n" (format-seconds
 			      "%H %M %S"
 			      (assoc-default 'duration job)))))
-
-(setq travis-user-login "AuPath")
-(setq travis-token "H60yeYCilDQ-htqJqjYHpw")
-(travis-set-headers travis-token)
-
-(add-to-list 'travis-user-list travis-user-login)
-(add-to-list 'travis-bookmarked-repos "AuPath/ProvaJavaProgetto")
 
 (provide 'travis-api)
 ;;; travis-api.el ends here
